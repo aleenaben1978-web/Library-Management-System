@@ -55,7 +55,7 @@ def register():
 
         name = request.form["name"]
         email = request.form["email"]
-       password = generate_password_hash(request.form["password"])
+        password = generate_password_hash(request.form["password"])
 
         # Check if email already exists
         cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
@@ -66,10 +66,14 @@ def register():
 
         # Save new user
         cursor.execute(
+            """
             INSERT INTO users (name, email, password, role)
             VALUES (%s, %s, %s, %s)
-           (name, email, password, "user")
+            """,
+            (name, email, password, "user")
         )
+           
+        
 
         db.commit()
 
@@ -78,8 +82,11 @@ def register():
     return render_template("register.html")
 @app.route("/books", methods=["GET", "POST"])
 def books():
+    
     if "user_id" not in session:
-    return redirect(url_for("login"))
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
     if request.method == "POST":
 
         title = request.form["title"]
@@ -133,13 +140,16 @@ def view_books():
     return render_template("view_books.html", books=books)
 @app.route("/delete_book/<int:id>")
 def delete_book(id):
+
     if session.get("role") != "admin":
-    return "Access denied. Admins only."
+        return "Access denied. Admins only."
 
     cursor.execute("DELETE FROM books WHERE id=%s", (id,))
     db.commit()
 
     return redirect(url_for("view_books"))
+
+    
 @app.route("/edit_book/<int:id>", methods=["GET", "POST"])
 def edit_book(id):
 
@@ -353,4 +363,4 @@ def return_book(id):
 
     return redirect(url_for("issued_books"))
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
